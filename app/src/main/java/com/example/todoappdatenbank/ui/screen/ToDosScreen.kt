@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -81,7 +80,7 @@ fun TodoScreen(
                 )
             }
             Text(
-                text = "Studierendenregister",
+                text = "Todos",
                 style = MaterialTheme.typography.titleLarge
             )
         }
@@ -113,7 +112,7 @@ fun TodoScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                "Eintrag anlegen",
+                "Todo anlegen",
                 style = MaterialTheme.typography.titleLarge
             )
         }
@@ -150,6 +149,10 @@ fun ExpandableToDoCard(
     onEditClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    val fallbackDeadline = LocalDateTime.now().plusMonths(1)
+    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm")
+    val formattedDeadline = todo.deadline?.format(formatter) ?: fallbackDeadline.format(formatter)
 
     Card(
         modifier = Modifier
@@ -197,8 +200,9 @@ fun ExpandableToDoCard(
                         "${todo.description}",
                         style = MaterialTheme.typography.titleLarge
                     )
+
                     Text(
-                        "${todo.deadline}",
+                        text = formattedDeadline,
                         style = MaterialTheme.typography.titleLarge
                     )
 
@@ -216,7 +220,7 @@ fun ExpandableToDoCard(
 }
 
 @Composable
-fun EditToDoDialog(
+fun EditToDoDialog (
     todo: ToDoDataClass?,
     onDismiss: () -> Unit,
     onSave: (ToDoDataClass) -> Unit,
@@ -228,26 +232,23 @@ fun EditToDoDialog(
     var name by remember { mutableStateOf(todo?.name ?: "") }
     var description by remember { mutableStateOf(todo?.description ?: "") }
     var selectedPriorityId by remember { mutableStateOf(todo?.priority ?: priorities.firstOrNull()?.id ?: 1) }
-    var deadline by remember { mutableStateOf(todo?.deadline?.toString() ?: "") }
+    var deadline by remember {
+        mutableStateOf(
+            todo?.deadline?.toString()
+                ?: LocalDateTime.now().plusMonths(1).toString()
+        )
+    }
     var expanded by remember { mutableStateOf(false) }
 
-    // Format für Datum und Uhrzeit
-    val currentDateTime = remember { LocalDateTime.now() }
-    val formattedDate = remember { DateTimeFormatter.ofPattern("E, dd MMM yyyy").format(currentDateTime) }
-    val formattedTime = remember { DateTimeFormatter.ofPattern("HH:mm").format(currentDateTime) }
-
-    // Date- und Time-Picker Dialog Zustände
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
 
-    // Funktion zum Öffnen des Time-Pickers
     fun openTimePicker() {
         val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
-            // Deadline aktualisieren mit dem ausgewählten Datum und Uhrzeit
             val dateTime = LocalDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault())
-            deadline = dateTime.toString()  // Deadline in der richtigen Form aktualisieren
+            deadline = dateTime.toString()
         }
 
         TimePickerDialog(
@@ -259,11 +260,10 @@ fun EditToDoDialog(
         ).show()
     }
 
-    // Funktion zum Öffnen des Date-Pickers
     fun openDatePicker() {
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             calendar.set(year, month, dayOfMonth)
-            openTimePicker()  // Öffne den TimePicker, nachdem ein Datum ausgewählt wurde
+            openTimePicker()
         }
 
         DatePickerDialog(
@@ -325,25 +325,22 @@ fun EditToDoDialog(
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = formattedDate,
-                        modifier = Modifier
-                            .clickable { openDatePicker() }
-                            .padding(8.dp)
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
-                            .padding(8.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = formattedTime,
-                        modifier = Modifier
-                            .clickable { openTimePicker() }
-                            .padding(8.dp)
-                            .border(1.dp, MaterialTheme.colorScheme.primary)
-                            .padding(8.dp)
-                    )
+                val formattedDeadline = remember(deadline) {
+                    LocalDateTime.parse(deadline).format(DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm"))
                 }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { openDatePicker() }
+                        .padding(8.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.primary)
+                        .padding(8.dp)
+                ) {
+                    Text(text = formattedDeadline) // Format: dd.MM.yyyy - HH:mm
+                }
+
             }
         },
         confirmButton = {
