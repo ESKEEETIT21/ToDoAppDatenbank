@@ -24,8 +24,5 @@ Wichtige Funktionen:
 * Fehlende Validierung von Eingaben:
   Die App überprüft derzeit nur, ob der Name des Todos nicht leer ist, wenn ein neues Todo erstellt oder bearbeitet wird. Weitere Eingabevalidierungen (z.B. für die Beschreibung oder die Priorität) sind nicht implementiert.
 
-* Kein Umgang mit Zeitzonen bei Deadlines:
-  Die App speichert und zeigt Deadlines ohne explizite Behandlung von Zeitzonen an. Es könnte zu Problemen bei der Anzeige oder Verarbeitung von Deadlines in verschiedenen Zeitzonen kommen.
-
 * Fehlende Tests:
   Die App enthält derzeit keine automatisierten Tests (Unit-Tests oder UI-Tests). Dies könnte dazu führen, dass unerwartete Fehler auftreten, wenn Änderungen an der App vorgenommen werden.
