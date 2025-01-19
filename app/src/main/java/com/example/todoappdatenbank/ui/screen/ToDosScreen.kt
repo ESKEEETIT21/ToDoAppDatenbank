@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
@@ -47,20 +48,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.todoappdatenbank.database.controller.ToDoController
 import com.example.todoappdatenbank.database.dataclass.ToDoDataClass
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-
 @Composable
 fun TodoScreen(
-    context: Context
+    context: Context,
+    navController: NavHostController = rememberNavController(),
+    showCompletedOnly: Boolean
 ) {
     val todoController = ToDoController(context)
-    var showCompletedOnly by remember { mutableStateOf(false) }
-    var todos by remember { mutableStateOf(todoController.getAllTodos().filter { !it.state }) }
+
+    var todos by remember {
+        mutableStateOf(
+            todoController.getAllTodos().filter { it.state == showCompletedOnly }
+        )
+    }
+
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedTodo by remember { mutableStateOf<ToDoDataClass?>(null) }
 
@@ -69,28 +78,23 @@ fun TodoScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = if (showCompletedOnly) "Completed Todos" else "Active Todos",
-                    style = MaterialTheme.typography.titleLarge
+            IconButton(onClick = {
+                navController.navigate("dashboard") {
+                    popUpTo("dashboard") { inclusive = true }
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück zum Dashboard"
                 )
             }
 
-            Button(onClick = {
-                showCompletedOnly = !showCompletedOnly
-                todos = if (showCompletedOnly) {
-                    todoController.getAllTodos().filter { it.state }
-                } else {
-                    todoController.getAllTodos().filter { !it.state }
-                }
-            }) {
-                Text(text = if (showCompletedOnly) "Show Active" else "Show Completed")
-            }
+            Text(
+                text = if (showCompletedOnly) "Completed Todos" else "Active Todos",
+                style = MaterialTheme.typography.titleLarge
+            )
         }
 
         LazyColumn(
@@ -109,11 +113,8 @@ fun TodoScreen(
                     onStateChange = { isChecked ->
                         val updatedTodo = todo.copy(state = isChecked)
                         todoController.updateTodo(updatedTodo)
-                        todos = if (showCompletedOnly) {
-                            todoController.getAllTodos().filter { it.state }
-                        } else {
-                            todoController.getAllTodos().filter { !it.state }
-                        }
+
+                        todos = todoController.getAllTodos().filter { it.state == showCompletedOnly }
                     }
                 )
             }
@@ -131,45 +132,35 @@ fun TodoScreen(
                     .align(Alignment.End)
                     .padding(16.dp)
             ) {
-                Text(
-                    "+",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Text("+", style = MaterialTheme.typography.titleLarge)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-    }
+        if (showEditDialog) {
+            EditToDoDialog(
+                todo = selectedTodo,
+                onDismiss = { showEditDialog = false },
+                onSave = { todo ->
+                    if (todo.id == 0) {
+                        todoController.insertTodo(todo)
+                    } else {
+                        todoController.updateTodo(todo)
+                    }
 
-    if (showEditDialog) {
-        EditToDoDialog(
-            todo = selectedTodo,
-            onDismiss = { showEditDialog = false },
-            onSave = { todo ->
-                if (todo.id == 0) {
-                    todoController.insertTodo(todo)
-                } else {
-                    todoController.updateTodo(todo)
+                    todos = todoController.getAllTodos().filter { it.state == showCompletedOnly }
+                    showEditDialog = false
+                },
+                onDelete = { todo ->
+                    todoController.deleteTodo(todo.id)
+
+                    todos = todoController.getAllTodos().filter { it.state == showCompletedOnly }
+                    showEditDialog = false
                 }
-                todos = if (showCompletedOnly) {
-                    todoController.getAllTodos().filter { it.state }
-                } else {
-                    todoController.getAllTodos().filter { !it.state }
-                }
-                showEditDialog = false
-            },
-            onDelete = { todo ->
-                todoController.deleteTodo(todo.id)
-                todos = if (showCompletedOnly) {
-                    todoController.getAllTodos().filter { it.state }
-                } else {
-                    todoController.getAllTodos().filter { !it.state }
-                }
-                showEditDialog = false
-            }
-        )
+            )
+        }
     }
 }
+
 
 @Composable
 fun ExpandableToDoCard(
@@ -385,7 +376,7 @@ fun EditToDoDialog (
                         .border(1.dp, MaterialTheme.colorScheme.primary)
                         .padding(8.dp)
                 ) {
-                    Text(text = formattedDeadline) // Format: dd.MM.yyyy - HH:mm
+                    Text(text = formattedDeadline)
                 }
 
             }
