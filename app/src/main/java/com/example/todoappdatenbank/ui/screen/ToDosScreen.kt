@@ -3,6 +3,7 @@ package com.example.todoappdatenbank.ui.screen
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
@@ -16,16 +17,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -35,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,11 +56,11 @@ import java.util.Calendar
 
 @Composable
 fun TodoScreen(
-    context: Context,
-    navController: NavHostController = rememberNavController()
+    context: Context
 ) {
     val todoController = ToDoController(context)
-    var todos by remember { mutableStateOf(todoController.getAllTodos()) }
+    var showCompletedOnly by remember { mutableStateOf(false) }
+    var todos by remember { mutableStateOf(todoController.getAllTodos().filter { !it.state }) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedTodo by remember { mutableStateOf<ToDoDataClass?>(null) }
 
@@ -66,23 +69,28 @@ fun TodoScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {
-                navController.navigate("dashboard") {
-                    popUpTo("dashboard") { inclusive = true }
-                }
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück zum Dashboard"
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (showCompletedOnly) "Completed Todos" else "Active Todos",
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
-            Text(
-                text = "Todos",
-                style = MaterialTheme.typography.titleLarge
-            )
+
+            Button(onClick = {
+                showCompletedOnly = !showCompletedOnly
+                todos = if (showCompletedOnly) {
+                    todoController.getAllTodos().filter { it.state }
+                } else {
+                    todoController.getAllTodos().filter { !it.state }
+                }
+            }) {
+                Text(text = if (showCompletedOnly) "Show Active" else "Show Completed")
+            }
         }
 
         LazyColumn(
@@ -97,6 +105,15 @@ fun TodoScreen(
                     onEditClick = {
                         selectedTodo = todo
                         showEditDialog = true
+                    },
+                    onStateChange = { isChecked ->
+                        val updatedTodo = todo.copy(state = isChecked)
+                        todoController.updateTodo(updatedTodo)
+                        todos = if (showCompletedOnly) {
+                            todoController.getAllTodos().filter { it.state }
+                        } else {
+                            todoController.getAllTodos().filter { !it.state }
+                        }
                     }
                 )
             }
@@ -104,17 +121,21 @@ fun TodoScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                selectedTodo = null
-                showEditDialog = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                "Todo anlegen",
-                style = MaterialTheme.typography.titleLarge
-            )
+        if (!showCompletedOnly) {
+            Button(
+                onClick = {
+                    selectedTodo = null
+                    showEditDialog = true
+                },
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    "+",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -130,12 +151,20 @@ fun TodoScreen(
                 } else {
                     todoController.updateTodo(todo)
                 }
-                todos = todoController.getAllTodos()
+                todos = if (showCompletedOnly) {
+                    todoController.getAllTodos().filter { it.state }
+                } else {
+                    todoController.getAllTodos().filter { !it.state }
+                }
                 showEditDialog = false
             },
             onDelete = { todo ->
                 todoController.deleteTodo(todo.id)
-                todos = todoController.getAllTodos()
+                todos = if (showCompletedOnly) {
+                    todoController.getAllTodos().filter { it.state }
+                } else {
+                    todoController.getAllTodos().filter { !it.state }
+                }
                 showEditDialog = false
             }
         )
@@ -146,13 +175,14 @@ fun TodoScreen(
 @Composable
 fun ExpandableToDoCard(
     todo: ToDoDataClass,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onStateChange: (Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     val fallbackDeadline = LocalDateTime.now().plusMonths(1)
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm")
-    val formattedDeadline = todo.deadline?.format(formatter) ?: fallbackDeadline.format(formatter)
+    val formattedDeadline = todo.deadline.format(formatter) ?: fallbackDeadline.format(formatter)
 
     Card(
         modifier = Modifier
@@ -178,10 +208,19 @@ fun ExpandableToDoCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${todo.name}",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = todo.state,
+                        onCheckedChange = { isChecked ->
+                            onStateChange(isChecked)
+                        }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = todo.name,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -197,7 +236,7 @@ fun ExpandableToDoCard(
                         .padding(top = 8.dp)
                 ) {
                     Text(
-                        "${todo.description}",
+                        todo.description,
                         style = MaterialTheme.typography.titleLarge
                     )
 
@@ -231,7 +270,7 @@ fun EditToDoDialog (
 
     var name by remember { mutableStateOf(todo?.name ?: "") }
     var description by remember { mutableStateOf(todo?.description ?: "") }
-    var selectedPriorityId by remember { mutableStateOf(todo?.priority ?: priorities.firstOrNull()?.id ?: 1) }
+    var selectedPriorityId by remember { mutableIntStateOf(todo?.priority ?: priorities.firstOrNull()?.id ?: 1) }
     var deadline by remember {
         mutableStateOf(
             todo?.deadline?.toString()
@@ -345,15 +384,19 @@ fun EditToDoDialog (
         },
         confirmButton = {
             Button(onClick = {
-                val updatedTodo = ToDoDataClass(
-                    id = todo?.id ?: 0,
-                    name = name,
-                    description = description,
-                    priority = selectedPriorityId,
-                    deadline = LocalDateTime.parse(deadline),
-                    state = false
-                )
-                onSave(updatedTodo)
+                if (name.trim().isEmpty()) {
+                    Toast.makeText(context, "Name darf nicht leer sein!", Toast.LENGTH_SHORT, ).show()
+                } else {
+                    val updatedTodo = ToDoDataClass(
+                        id = todo?.id ?: 0,
+                        name = name,
+                        description = description,
+                        priority = selectedPriorityId,
+                        deadline = LocalDateTime.parse(deadline),
+                        state = false
+                    )
+                    onSave(updatedTodo)
+                }
             }) {
                 Text("Save")
             }

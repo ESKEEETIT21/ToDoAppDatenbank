@@ -14,15 +14,13 @@ fun Dashboard() {
         composable("active_todos") {
             val context = LocalContext.current
             TodoScreen(
-                context = context,
-                navController = navController
+                context = context
             )
         }
         composable("completed_todos") {
             val context = LocalContext.current
             TodoScreen(
-                context = context,
-                navController = navController
+                context = context
             )
         }
     }
