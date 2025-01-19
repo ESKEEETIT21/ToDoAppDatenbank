@@ -56,6 +56,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
+
 @Composable
 fun TodoScreen(
     context: Context,
@@ -87,7 +89,7 @@ fun TodoScreen(
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück zum Dashboard"
+                    contentDescription = "Back to Dashboard"
                 )
             }
 
@@ -161,7 +163,6 @@ fun TodoScreen(
     }
 }
 
-
 @Composable
 fun ExpandableToDoCard(
     todo: ToDoDataClass,
@@ -174,10 +175,11 @@ fun ExpandableToDoCard(
     val priorities = todoController.getAllPriorities()
 
     val fallbackDeadline = LocalDateTime.now().plusMonths(1)
-    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm")
+    val locale = Locale.getDefault()
+    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm", locale)
     val formattedDeadline = todo.deadline.format(formatter) ?: fallbackDeadline.format(formatter)
 
-    val priorityLevel = priorities.firstOrNull { it.id == todo.priority }?.level ?: "Unbekannt"
+    val priorityLevel = priorities.firstOrNull { it.id == todo.priority }?.level ?: "Unknown"
 
     Card(
         modifier = Modifier
@@ -217,7 +219,7 @@ fun ExpandableToDoCard(
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (expanded) "Einklappen" else "Ausklappen"
+                        contentDescription = if (expanded) "Collapse" else "Expand"
                     )
                 }
             }
@@ -239,14 +241,14 @@ fun ExpandableToDoCard(
                     )
 
                     Text(
-                        text = "${formattedDeadline} Uhr",
+                        text = "${formattedDeadline} o'clock",
                         style = MaterialTheme.typography.titleLarge
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        "Lang drücken zum Bearbeiten",
+                        "Long press to edit",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.align(Alignment.End)
                     )
@@ -316,7 +318,7 @@ fun EditToDoDialog (
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = if (todo == null) "Neues Todo anlegen" else "Todo bearbeiten")
+            Text(text = if (todo == null) "Create new Todo" else "Edit Todo")
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -384,7 +386,7 @@ fun EditToDoDialog (
         confirmButton = {
             Button(onClick = {
                 if (name.trim().isEmpty()) {
-                    Toast.makeText(context, "Name darf nicht leer sein!", Toast.LENGTH_SHORT, ).show()
+                    Toast.makeText(context, "Name cannot be empty!", Toast.LENGTH_SHORT, ).show()
                 } else {
                     val updatedTodo = ToDoDataClass(
                         id = todo?.id ?: 0,

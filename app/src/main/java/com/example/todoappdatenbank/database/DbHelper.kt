@@ -35,13 +35,11 @@ class DbHelper(val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
                         inputStream.copyTo(outputStream)
                     }
                 }
-                // Debug-Log : Erfolg
+
                 android.util.Log.d("DbHelper", "Database copied successfully to: ${dbPath.absolutePath}")
-                // Debug-Log Größe der Datei prüfen
                 android.util.Log.d("DbHelper", "Database size: ${dbPath.length()} bytes")
 
             } catch (e: Exception) {
-                //Debug-Log: Fail
                 android.util.Log.e("DbHelper", "Error copying database", e)
             }
         }
