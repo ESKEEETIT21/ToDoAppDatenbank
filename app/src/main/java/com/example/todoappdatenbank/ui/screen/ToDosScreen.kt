@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.example.todoappdatenbank.ui.screen
 
 import android.app.DatePickerDialog
@@ -45,8 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.todoappdatenbank.database.controller.ToDoController
 import com.example.todoappdatenbank.database.dataclass.ToDoDataClass
 import java.time.LocalDateTime
@@ -171,7 +171,6 @@ fun TodoScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExpandableToDoCard(
     todo: ToDoDataClass,
@@ -180,9 +179,14 @@ fun ExpandableToDoCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    val todoController = ToDoController(LocalContext.current)
+    val priorities = todoController.getAllPriorities()
+
     val fallbackDeadline = LocalDateTime.now().plusMonths(1)
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm")
     val formattedDeadline = todo.deadline.format(formatter) ?: fallbackDeadline.format(formatter)
+
+    val priorityLevel = priorities.firstOrNull { it.id == todo.priority }?.level ?: "Unbekannt"
 
     Card(
         modifier = Modifier
@@ -211,9 +215,7 @@ fun ExpandableToDoCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = todo.state,
-                        onCheckedChange = { isChecked ->
-                            onStateChange(isChecked)
-                        }
+                        onCheckedChange = { isChecked -> onStateChange(isChecked) }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -241,7 +243,12 @@ fun ExpandableToDoCard(
                     )
 
                     Text(
-                        text = formattedDeadline,
+                        text = "Priority: ${priorityLevel}",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    Text(
+                        text = "${formattedDeadline} Uhr",
                         style = MaterialTheme.typography.titleLarge
                     )
 
@@ -257,6 +264,7 @@ fun ExpandableToDoCard(
         }
     }
 }
+
 
 @Composable
 fun EditToDoDialog (
