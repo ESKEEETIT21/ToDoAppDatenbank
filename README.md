@@ -27,5 +27,5 @@ Wichtige Funktionen:
 * Fehlende Tests:
   Die App enthält derzeit keine automatisierten Tests (Unit-Tests oder UI-Tests). Dies könnte dazu führen, dass unerwartete Fehler auftreten, wenn Änderungen an der App vorgenommen werden.
 
-*Kein Dark Mode Support:
+* Kein Dark Mode Support:
 Die App unterstützt derzeit keinen Dark Mode. Benutzer können nur den Standard-Modus verwenden
