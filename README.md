@@ -1,5 +1,5 @@
 # APK 
-* Path app/release
+Path: app/release
 
 # Funktionsbeschreibung
 Die Todo-App ermöglicht es Nutzern, Aufgaben (Todos) zu erstellen, zu bearbeiten, abzuschließen und zu löschen. Die App bietet zwei Hauptansichten:
