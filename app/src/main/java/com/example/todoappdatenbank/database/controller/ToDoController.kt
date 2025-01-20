@@ -11,6 +11,12 @@ import java.time.LocalDateTime
 class ToDoController(context: Context) {
     private val dbHelper = DbHelper(context)
 
+    /**
+     * Inserts a new todo item into the database.
+     *
+     * @param todo The todo item to be inserted.
+     * @return True if the insert operation was successful, false otherwise.
+     */
     fun insertTodo(todo: ToDoDataClass): Boolean {
         val db = dbHelper.writableDatabase
         return try {
@@ -31,6 +37,12 @@ class ToDoController(context: Context) {
         }
     }
 
+    /**
+     * Updates an existing todo item in the database.
+     *
+     * @param todo The todo item to be updated.
+     * @return True if the update operation was successful, false otherwise.
+     */
     fun updateTodo(todo: ToDoDataClass): Boolean {
         val db = dbHelper.writableDatabase
         return try {
@@ -52,6 +64,12 @@ class ToDoController(context: Context) {
         }
     }
 
+    /**
+     * Deletes a todo item from the database.
+     *
+     * @param todoId The ID of the todo item to be deleted.
+     * @return True if the delete operation was successful, false otherwise.
+     */
     fun deleteTodo(todoId: Int): Boolean {
         val db = dbHelper.writableDatabase
         return try {
@@ -65,6 +83,11 @@ class ToDoController(context: Context) {
         }
     }
 
+    /**
+     * Retrieves all todo items from the database.
+     *
+     * @return A list of all todo items.
+     */
     fun getAllTodos(): List<ToDoDataClass> {
         val db = dbHelper.readableDatabase
         val todos = mutableListOf<ToDoDataClass>()
@@ -92,6 +115,11 @@ class ToDoController(context: Context) {
         return todos
     }
 
+    /**
+     * Retrieves all priority levels from the database.
+     *
+     * @return A list of all priority levels.
+     */
     fun getAllPriorities(): List<PrioritiesDataClass> {
         val db = dbHelper.readableDatabase
         val priorities = mutableListOf<PrioritiesDataClass>()

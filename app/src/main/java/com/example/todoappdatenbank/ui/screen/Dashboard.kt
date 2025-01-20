@@ -17,13 +17,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
+/**
+ * Composable function for the dashboard screen that offers navigation options
+ * to view active or completed todos.
+ * It also manages a flag to filter and display the todos accordingly.
+ *
+ * @param navController The NavHostController used for navigation.
+ */
 @Composable
 fun Dashboard() {
     val navController = rememberNavController()

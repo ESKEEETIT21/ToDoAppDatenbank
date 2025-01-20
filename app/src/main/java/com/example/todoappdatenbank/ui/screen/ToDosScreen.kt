@@ -58,6 +58,14 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
+/**
+ * Composable function for the Todo screen that displays a list of todos based on their completion state (active or completed).
+ * It provides the ability to edit, create, and delete todos.
+ *
+ * @param context The context used to interact with the ToDoController.
+ * @param navController The NavHostController used for navigation (defaults to a new instance).
+ * @param showCompletedOnly Boolean flag to filter todos based on completion state.
+ */
 @Composable
 fun TodoScreen(
     context: Context,
@@ -163,6 +171,14 @@ fun TodoScreen(
     }
 }
 
+/**
+ * Composable function that displays an expandable card with todo details, including name, description, priority, and deadline.
+ * It provides a checkbox for toggling the todo's state and an option for editing on long press.
+ *
+ * @param todo The todo data to display in the card.
+ * @param onEditClick Lambda function invoked when the card is long-pressed to edit the todo.
+ * @param onStateChange Lambda function invoked when the checkbox state is toggled.
+ */
 @Composable
 fun ExpandableToDoCard(
     todo: ToDoDataClass,
@@ -258,6 +274,15 @@ fun ExpandableToDoCard(
     }
 }
 
+/**
+ * Composable function for displaying a dialog to create or edit a todo item.
+ * The dialog allows users to set the name, description, priority, and deadline, and provides options to save or delete the todo.
+ *
+ * @param todo The todo to edit (null for creating a new todo).
+ * @param onDismiss Lambda function invoked when the dialog is dismissed.
+ * @param onSave Lambda function invoked when the todo is saved or updated.
+ * @param onDelete Lambda function invoked when the todo is deleted.
+ */
 
 @Composable
 fun EditToDoDialog (
